@@ -46,6 +46,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y make automake g++
+          sudo apt-get install -y libpoppler-glib-dev poppler-utils libwxgtk3.0-gtk3-dev
           wget -c https://github.com/vslavik/diff-pdf/releases/download/v0.5/diff-pdf-0.5.tar.gz -O - | tar -xz && mv diff-pdf{-0.5,}
           cd diff-pdf
           ./bootstrap
