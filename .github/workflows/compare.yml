@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       prs: ${{ steps.find-prs.outputs.result }}
-      prerelease-sha: ${{ steps.find-latest-prerelease.outputs.result }}
+      prerelease-id: ${{ steps.find-latest-prerelease.outputs.result }}
     steps:
       - id: find-prs
         uses: actions/github-script@v4
@@ -45,9 +45,7 @@ jobs:
                 releases(first: 10, orderBy: {field: CREATED_AT, direction: DESC}) {
                   nodes {
                     isPrerelease,
-                    tag {
-                      target {oid}
-                    }
+                    id
                   }
                 }
               }
@@ -57,7 +55,7 @@ jobs:
               name: context.repo.repo
             }
             const result = await github.graphql(query, variables);
-            return result.repository.releases.nodes.filter(y => y.isPrerelease)[0].tag.target.oid
+            return result.repository.releases.nodes.filter(y => y.isPrerelease)[0].id
   diff:
     needs: query-github
     strategy:
@@ -66,6 +64,14 @@ jobs:
         smalltalk: [Trunk, 5.3]
     runs-on: ubuntu-latest
     steps:
+      - name: Load latest prereleases
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: ${{ github.repository }}
+          version: ${{ needs.query-github.outputs.prerelease-id }}
+          file: SBE-${{ matrix.smalltalk }}.pdf
+          target: SBE-${{ matrix.smalltalk }}.old.pdf
+          token: ${{ github.token }}
       - name: Setup diff-pdf
         run: |
           sudo apt-get update
@@ -77,14 +83,6 @@ jobs:
           ./configure
           make
           sudo make install
-      - name: Load latest prereleases
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          repo: ${{ github.repository }}
-          version: ${{ needs.query-github.outputs.prerelease-sha }}
-          file: SBE-${{ matrix.smalltalk }}.pdf
-          target: SBE-${{ matrix.smalltalk }}.old.pdf
-          token: ${{ github.token }}
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
