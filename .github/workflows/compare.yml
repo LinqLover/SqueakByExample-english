@@ -45,8 +45,9 @@ jobs:
       - name: Setup diff-pdf
         run: |
           sudo apt-get update
-          sudo apt-get install make automake g++
+          sudo apt-get install -y make automake g++
           wget -c https://github.com/vslavik/diff-pdf/releases/download/v0.5/diff-pdf-0.5.tar.gz -O - | tar -xz && mv diff-pdf{-0.5,}
+          cd diff-pdf
           ./bootstrap
           ./configure
           make
