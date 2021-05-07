@@ -6,7 +6,7 @@ on:
     types: [completed]
 
 jobs:
-  find-prs:
+  query-github:
     runs-on: ubuntu-latest
     outputs:
       prs: ${{ steps.find-prs.outputs.result }}
