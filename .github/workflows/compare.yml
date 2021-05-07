@@ -40,13 +40,17 @@ jobs:
       matrix:
         pr: ${{ fromJson(needs.find-prs.outputs.prs) }}
         smalltalk: [Trunk, 5.3]
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Setup comparepdfcmd
+      - name: Setup diff-pdf
         run: |
-          curl http://www.qtrac.eu/comparepdfcmd-2.1.9.zip -o comparepdfcmd.zip
-          unzip comparepdfcmd.zip
-          ./comparepdfcmd/comparepdfcmd.exe try
+          sudo apt-get update
+          sudo apt-get install make automake g++
+          wget -c https://github.com/vslavik/diff-pdf/releases/download/v0.5/diff-pdf-0.5.tar.gz -O - | tar -xz && mv diff-pdf{-0.5,}
+          ./bootstrap
+          ./configure
+          make
+          sudo make install
       - name: Find latest prelease
         run: |
           echo "::set-output name=sha::$(git describe --tags $(git rev-list origin/master --tags) | grep ^untagged- | head -n 1)\n"
@@ -69,7 +73,7 @@ jobs:
           path: SBE-${{ matrix.smalltalk }}.pdf
       - name: Compare PDFs
         run: |
-           comparepdfcmd.exe -r diff-${{ matrix.smalltalk }}.pdf SBE-${{ matrix.smalltalk }}.old.pdf SBE-${{ matrix.smalltalk }}.pdf
+           diff-pdf --skip-identical --mark-differences --output-diff=diff-${{ matrix.smalltalk }}.pdf SBE-${{ matrix.smalltalk }}.old.pdf SBE-${{ matrix.smalltalk }}.pdf
       - name: Upload diffs
         uses: actions/upload-artifact@master
         with:
