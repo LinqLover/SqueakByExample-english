@@ -9,7 +9,7 @@ jobs:
   find-prs:
     runs-on: ubuntu-latest
     outputs:
-      prs: ${{ steps.find-prs.outputs.prs }}
+      prs: ${{ steps.find-prs.outputs.result }}
     steps:
       - id: find-prs
         uses: actions/github-script@v4
