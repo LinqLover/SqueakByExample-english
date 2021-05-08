@@ -46,6 +46,8 @@ jobs:
               per_page: 10
             })).data
             console.log(releases)
+            console.log(releases.filter)
+            console.log(releases.filter(y => y.isPrerelease))
             console.log(releases.filter(y => y.isPrerelease)[0])
             return releases.filter(y => y.isPrerelease)[0]
   diff:
