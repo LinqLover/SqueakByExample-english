@@ -85,6 +85,7 @@ jobs:
           run_id: ${{ github.event.workflow_run.id }}
           name: book-${{ matrix.smalltalk }}
           path: SBE-${{ matrix.smalltalk }}.pdf
+          repo: hpi-swa-lab/squeakbyexample-english
       - name: Compare PDFs
         run: |
            diff-pdf --skip-identical --mark-differences --output-diff=diff-${{ matrix.smalltalk }}.pdf SBE-${{ matrix.smalltalk }}.old.pdf SBE-${{ matrix.smalltalk }}.pdf
