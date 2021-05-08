@@ -40,12 +40,13 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const releases = await github.repos.listReleases({
+            const releases = (await github.repos.listReleases({
               owner: 'hpi-swa-lab', //context.repo.owner,
               repo: context.repo.repo,
               per_page: 10
-            })
+            })).data
             console.log(releases)
+            console.log(releases.filter(y => y.isPrerelease)[0])
             return releases.filter(y => y.isPrerelease)[0]
   diff:
     needs: query-github
