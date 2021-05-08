@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         pr: ${{ fromJson(needs.query-github.outputs.prs) }}
-        smalltalk: [Trunk, 5.3]
+        smalltalk: [5.3] #[Trunk, 5.3]
     runs-on: ubuntu-latest
     steps:
       - name: Load latest prereleases
