@@ -6,10 +6,11 @@ on:
     types: [completed]
 
 jobs:
-  find-prs:
+  query-github:
     runs-on: ubuntu-latest
     outputs:
       prs: ${{ steps.find-prs.outputs.result }}
+      prerelease: ${{ steps.find-latest-prerelease.outputs.result }}
     steps:
       - id: find-prs
         uses: actions/github-script@v4
@@ -32,44 +33,55 @@ jobs:
               name: context.repo.repo,
               baseRefName: 'master'
             }
-            const result = await github.graphql(query, variables);
+            const result = await github.graphql(query, variables)
             return result.repository.pullRequests.nodes
+      - id: find-latest-prerelease
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const releases = (await github.repos.listReleases({
+              owner: 'hpi-swa-lab', //context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 10
+            })).data
+            console.log(releases)
+            console.log(releases.filter)
+            console.log(releases.filter(y => y.prerelease))
+            console.log(releases.filter(y => y.prerelease)[0])
+            return releases.filter(y => y.prerelease)[0]
   diff:
-    needs: find-prs
+    needs: query-github
     strategy:
       matrix:
-        pr: ${{ fromJson(needs.find-prs.outputs.prs) }}
+        pr: ${{ fromJson(needs.query-github.outputs.prs) }}
         smalltalk: [Trunk, 5.3]
     runs-on: ubuntu-latest
     steps:
+      - name: Load latest prereleases
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: 'hpi-swa-lab/squeakbyexample-english' # ${{ github.repository }}
+          version: ${{ fromJson(needs.query-github.outputs.prerelease).id }}
+          file: SBE-${{ matrix.smalltalk }}.pdf
+          target: SBE-${{ matrix.smalltalk }}.old.pdf
+          token: ${{ github.token }}
       - name: Setup diff-pdf
         run: |
           sudo apt-get update
           sudo apt-get install -y make automake g++
+          sudo apt-get install -y libpoppler-glib-dev poppler-utils libwxgtk3.0-gtk3-dev
           wget -c https://github.com/vslavik/diff-pdf/releases/download/v0.5/diff-pdf-0.5.tar.gz -O - | tar -xz && mv diff-pdf{-0.5,}
           cd diff-pdf
           ./bootstrap
           ./configure
           make
           sudo make install
-      - name: Find latest prelease
-        run: |
-          echo "::set-output name=sha::$(git describe --tags $(git rev-list origin/master --tags) | grep ^untagged- | head -n 1)\n"
-        id: find-latest-prerelease
-      - name: Load latest prereleases
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          repo: ${{ github.repository }}
-          version: ${{ steps.find-latest-prerelease.outputs.sha }}
-          file: SBE-${{ matrix.smalltalk }}.pdf
-          target: SBE-${{ matrix.smalltalk }}.old.pdf
-          token: ${{ github.token }}
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ github.token }}
-          #run_id: ${{ github.event.workflow_run.id }}
-          pr: ${{ matrix.pr.number }}
+          run_id: ${{ github.event.workflow_run.id }}
           name: book-${{ matrix.smalltalk }}
           path: SBE-${{ matrix.smalltalk }}.pdf
       - name: Compare PDFs
