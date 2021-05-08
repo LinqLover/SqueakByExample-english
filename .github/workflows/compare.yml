@@ -47,9 +47,9 @@ jobs:
             })).data
             console.log(releases)
             console.log(releases.filter)
-            console.log(releases.filter(y => y.isPrerelease))
-            console.log(releases.filter(y => y.isPrerelease)[0])
-            return releases.filter(y => y.isPrerelease)[0]
+            console.log(releases.filter(y => y.prerelease))
+            console.log(releases.filter(y => y.prerelease)[0])
+            return releases.filter(y => y.prerelease)[0]
   diff:
     needs: query-github
     strategy:
